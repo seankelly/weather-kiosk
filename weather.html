@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Weather Kiosk</title>
+        <style type="text/css">
+            div {
+                border: 1px solid black;
+                padding: 0.4em;
+                margin: 0.4em;
+                min-height: 200px;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+                grid-auto-rows: minmax(100px, auto);
+            }
+            .grid-one {
+                grid-column: span 1;
+                grid-row: 1;
+            }
+            .grid-full {
+                grid-column: span 3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="grid">
+            <div id="temperature" class="grid-one">Temperature</div>
+            <div id="weather-info" class="grid-one">Weather info</div>
+            <div id="moon" class="grid-one">Moon</div>
+            <div class="grid-full">
+                <div id="temperature-graph">Temperature and dewpoint graph</div>
+                <div id="precipitation-potential">Sky cover / precipitation potential</div>
+                <div id="precipitation-amount">Rain/snow amounts</div>
+            </div>
+        </div>
+    </body>
+    <script src="d3.v7.min.js"></script>
+    <script src="weather.js"></script>
+</html>
