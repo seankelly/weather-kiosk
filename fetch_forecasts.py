@@ -14,46 +14,65 @@ NWS_FORECAST_TABLE_URL = ('https://forecast.weather.gov/MapClick.php?lat={latitu
                           'lon={longitude}&FcstType=digitalDWML')
 
 
-def fetch_forecast_table(latitude, longitude):
-    forecast_url = NWS_FORECAST_TABLE_URL.format(latitude=latitude, longitude=longitude)
-    req = requests.get(forecast_url)
-    req.raise_for_status()
-    return req.text
+class NwsForecastTable:
 
+    def __init__(self, latitude, longitude):
+        self._xml = None
+        self._table = {}
+        self.latitude = latitude
+        self.longitude = longitude
 
-def parse_forecast(forecast):
-    def get_values(forecast, xpath, type=int):
-        values = []
-        for node in forecast.findall(xpath):
-            try:
-                values.append(type(node.text))
-            except ValueError:
-                values.append(None)
-        return values
+    def run(self):
+        xml = self.fetch()
+        forecast_table = self.parse(xml)
+        return forecast_table
 
-    valid_times = []
-    for node in forecast.findall('.//start-valid-time'):
-        valid_times.append(node.text)
-    temperatures = get_values(forecast, './/temperature[@type="hourly"]/value')
-    dew_points = get_values(forecast, './/temperature[@type="dew point"]/value')
-    cloud_amount = get_values(forecast, './/cloud-amount/value')
-    precipitation_probability = get_values(forecast, './/probability-of-precipitation/value')
-    qpf = get_values(forecast, './/hourly-qpf/value', type=float)
+    def run_with_input(self, xml_etree):
+        self._xml = xml_etree
+        forecast_table = self.parse(xml_etree)
+        return forecast_table
 
-    forecast_output = []
-    for item in zip(valid_times, temperatures, dew_points, cloud_amount,
-                    precipitation_probability, qpf):
-        entry = {
-            'time': item[0],
-            'temperature': item[1],
-            'dew_point': item[2],
-            'cloud_amount': item[3],
-            'precipitation_probability': item[4],
-            'qpf': item[5],
-        }
-        forecast_output.append(entry)
+    def fetch(self):
+        forecast_url = NWS_FORECAST_TABLE_URL.format(latitude=self.latitude,
+                                                     longitude=self.longitude)
+        req = requests.get(forecast_url)
+        req.raise_for_status()
+        self._xml = ElementTree.fromstring(req.text)
+        return self._xml
 
-    return forecast_output
+    def parse(self, forecast):
+        def get_values(forecast, xpath, type=int):
+            values = []
+            for node in forecast.findall(xpath):
+                try:
+                    values.append(type(node.text))
+                except ValueError:
+                    values.append(None)
+            return values
+
+        valid_times = []
+        for node in forecast.findall('.//start-valid-time'):
+            valid_times.append(node.text)
+        temperatures = get_values(forecast, './/temperature[@type="hourly"]/value')
+        dew_points = get_values(forecast, './/temperature[@type="dew point"]/value')
+        cloud_amount = get_values(forecast, './/cloud-amount/value')
+        precipitation_probability = get_values(forecast, './/probability-of-precipitation/value')
+        qpf = get_values(forecast, './/hourly-qpf/value', type=float)
+
+        forecast_output = []
+        for item in zip(valid_times, temperatures, dew_points, cloud_amount,
+                        precipitation_probability, qpf):
+            entry = {
+                'time': item[0],
+                'temperature': item[1],
+                'dew_point': item[2],
+                'cloud_amount': item[3],
+                'precipitation_probability': item[4],
+                'qpf': item[5],
+            }
+            forecast_output.append(entry)
+        self._table = forecast_output
+        return forecast_output
 
 
 def options():
@@ -78,13 +97,14 @@ def main():
         if not latitude or not longitude:
             print("Missing latitude or longitude key in location.")
             return
-        forecast_table = fetch_forecast_table(latitude, longitude)
-        forecast = ElementTree.fromstring(forecast_table)
+        forecast_table = NwsForecastTable(latitude, longitude)
+        forecast_output = forecast_table.run()
     else:
         with open(args.input) as forecast_input:
             forecast = ElementTree.fromstring(forecast_input)
+        forecast_table = NwsForecastTable(None, None)
+        forecast_output = forecast_table.run_with_input(forecast)
 
-    forecast_output = parse_forecast(forecast)
     with open('forecast-table.json', 'w') as output:
         json.dump(forecast_output, output)
 
