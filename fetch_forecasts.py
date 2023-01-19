@@ -9,6 +9,18 @@ import requests
 import yaml
 
 
+CONFIG_DEFAULT_PATH = './weather_config.yaml'
+NWS_FORECAST_TABLE_URL = ('https://forecast.weather.gov/MapClick.php?lat={latitude}&'
+                          'lon={longitude}&FcstType=digitalDWML')
+
+
+def fetch_forecast_table(latitude, longitude):
+    forecast_url = NWS_FORECAST_TABLE_URL.format(latitude=latitude, longitude=longitude)
+    req = requests.get(forecast_url)
+    req.raise_for_status()
+    return req.text
+
+
 def parse_forecast(forecast):
     def get_values(forecast, xpath, type=int):
         values = []
@@ -41,13 +53,12 @@ def parse_forecast(forecast):
         }
         forecast_output.append(entry)
 
-    print(forecast_output)
     return forecast_output
 
 
 def options():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config')
+    parser.add_argument('--config', default=CONFIG_DEFAULT_PATH)
     parser.add_argument('--input', metavar="FORECAST_XML")
     args = parser.parse_args()
     return args
@@ -55,12 +66,27 @@ def options():
 
 def main():
     args = options()
-    if args.input:
+    if not args.input:
+        with open(args.config) as config_file:
+            config = yaml.safe_load(config_file)
+        location = config.get('location')
+        if not location:
+            print("Missing location key.")
+            return
+        latitude = location.get('latitude')
+        longitude = location.get('longitude')
+        if not latitude or not longitude:
+            print("Missing latitude or longitude key in location.")
+            return
+        forecast_table = fetch_forecast_table(latitude, longitude)
+        forecast = ElementTree.fromstring(forecast_table)
+    else:
         with open(args.input) as forecast_input:
-            forecast = ElementTree.parse(forecast_input)
-            forecast_output = parse_forecast(forecast)
-        with open('forecast-table.json', 'w') as output:
-            json.dump(forecast_output, output)
+            forecast = ElementTree.fromstring(forecast_input)
+
+    forecast_output = parse_forecast(forecast)
+    with open('forecast-table.json', 'w') as output:
+        json.dump(forecast_output, output)
 
 
 if __name__ == '__main__':
