@@ -1,7 +1,30 @@
 let temps;
 
 function parse_forecast(json) {
+    parse_gridpoints_forecast(json);
     parse_forecast_table(json.table);
+}
+
+function parse_gridpoints_forecast(json) {
+    // "now" is the next hour so is close to the current temperature.
+    table = json.table;
+    now = table[0];
+
+    // "current_period" is the current day/night period. It will cover the
+    // entire time the sun is up or down respectively. The associated
+    // temperature is the predicted high or low.
+    forecast = json.forecast;
+    periods = forecast.periods;
+    current_period = periods[0];
+
+    temperature = current_period.temperature;
+    temperature_unit = current_period.temperatureUnit;
+    temperature_id = document.getElementById('temperature');
+    temperature_id.innerHTML = `<h1>Now: ${now.temperature}  °${temperature_unit}</h1><h1>Predicted: ${temperature} °${temperature_unit}</h1>`;
+
+    desc = current_period.detailedForecast;
+    weather_info_id = document.getElementById('weather-info');
+    weather_info_id.innerHTML = `<h2>${desc}</h2>`;
 }
 
 function parse_forecast_table(json) {
