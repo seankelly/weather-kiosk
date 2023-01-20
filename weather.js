@@ -136,7 +136,7 @@ function graph_forecast_table(points, element_id, colors, y_axis_format) {
         .data(points)
         .join('path')
             .attr('stroke', (d) => colors(d[0]))
-            .attr('stroke-width', 1.5)
+            .attr('stroke-width', 2.5)
             .attr('fill', 'none')
             .attr('d', function(d) {
                 return d3.line()
