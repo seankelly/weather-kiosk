@@ -147,7 +147,7 @@ function graph_forecast_table(points, element_id, colors, y_axis_format) {
 }
 
 function refresh() {
-    let resp = fetch("./forecast-table.json")
+    let resp = fetch("./forecast.json")
         .then((response) => response.json())
         .then(parse_forecast);
 }

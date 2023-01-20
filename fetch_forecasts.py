@@ -10,6 +10,7 @@ import yaml
 
 
 CONFIG_DEFAULT_PATH = './weather_config.yaml'
+CONFIG_DEFAULT_OUTPUT = './forecast.json'
 NWS_FORECAST_TABLE_URL = ('https://forecast.weather.gov/MapClick.php?lat={latitude}&'
                           'lon={longitude}&FcstType=digitalDWML')
 
@@ -79,6 +80,7 @@ def options():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default=CONFIG_DEFAULT_PATH)
     parser.add_argument('--input', metavar="FORECAST_XML")
+    parser.add_argument('--output', metavar="OUTPUT_JSON", default=CONFIG_DEFAULT_OUTPUT)
     args = parser.parse_args()
     return args
 
@@ -107,7 +109,7 @@ def main():
         forecast_table = NwsForecastTable(None, None)
         forecast_output['table'] = forecast_table.run_with_input(forecast)
 
-    with open('forecast-table.json', 'w') as output:
+    with open(args.output, 'w') as output:
         json.dump(forecast_output, output)
 
 
