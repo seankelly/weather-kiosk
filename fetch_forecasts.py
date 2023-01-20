@@ -13,6 +13,37 @@ CONFIG_DEFAULT_PATH = './weather_config.yaml'
 CONFIG_DEFAULT_OUTPUT = './forecast.json'
 NWS_FORECAST_TABLE_URL = ('https://forecast.weather.gov/MapClick.php?lat={latitude}&'
                           'lon={longitude}&FcstType=digitalDWML')
+NWS_API_GRIDPOINTS_URL = 'https://api.weather.gov/gridpoints/{office}/{gridx},{gridy}'
+NWS_API_GRIDPOINTS_FORECAST_URL = NWS_API_GRIDPOINTS_URL + '/forecast'
+
+
+class NwsGridpointsForecast:
+
+    def __init__(self, gridpoints):
+        self._json = None
+        self.office = None
+        self.gridx = None
+        self.gridy = None
+        self._config(gridpoints)
+
+    def _config(self, gridpoints):
+        self.office = gridpoints.get('office')
+        self.gridx = gridpoints.get('gridX')
+        self.gridy = gridpoints.get('gridY')
+
+    def run(self):
+        json = self.fetch()
+        return json.get('properties')
+
+    def fetch(self):
+        if self.office is None or self.gridx is None or self.gridy is None:
+            return {}
+        forecast_url = NWS_API_GRIDPOINTS_FORECAST_URL.format(
+            office=self.office, gridx=self.gridx, gridy=self.gridy)
+        req = requests.get(forecast_url)
+        req.raise_for_status()
+        self._json = req.json()
+        return self._json
 
 
 class NwsForecastTable:
@@ -89,6 +120,9 @@ def main():
     args = options()
     forecast_output = {}
 
+    with open(args.config) as config_file:
+        config = yaml.safe_load(config_file)
+
     if not args.input:
         with open(args.config) as config_file:
             config = yaml.safe_load(config_file)
@@ -108,6 +142,10 @@ def main():
             forecast = ElementTree.fromstring(forecast_input)
         forecast_table = NwsForecastTable(None, None)
         forecast_output['table'] = forecast_table.run_with_input(forecast)
+
+    if 'gridpoints' in config:
+        gridpoints_forecast = NwsGridpointsForecast(config['gridpoints'])
+        forecast_output['forecast'] = gridpoints_forecast.run()
 
     with open(args.output, 'w') as output:
         json.dump(forecast_output, output)
