@@ -1,5 +1,9 @@
 let temps;
 
+function parse_forecast(json) {
+    parse_forecast_table(json.table);
+}
+
 function parse_forecast_table(json) {
     // Convert object of arrays to array of objects. The "times" object is
     // known to exist and is the x axis so use that as the starting point.
@@ -145,7 +149,7 @@ function graph_forecast_table(points, element_id, colors, y_axis_format) {
 function refresh() {
     let resp = fetch("./forecast-table.json")
         .then((response) => response.json())
-        .then(parse_forecast_table);
+        .then(parse_forecast);
 }
 
 refresh();

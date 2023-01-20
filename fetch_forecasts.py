@@ -85,6 +85,8 @@ def options():
 
 def main():
     args = options()
+    forecast_output = {}
+
     if not args.input:
         with open(args.config) as config_file:
             config = yaml.safe_load(config_file)
@@ -98,12 +100,12 @@ def main():
             print("Missing latitude or longitude key in location.")
             return
         forecast_table = NwsForecastTable(latitude, longitude)
-        forecast_output = forecast_table.run()
+        forecast_output['table'] = forecast_table.run()
     else:
         with open(args.input) as forecast_input:
             forecast = ElementTree.fromstring(forecast_input)
         forecast_table = NwsForecastTable(None, None)
-        forecast_output = forecast_table.run_with_input(forecast)
+        forecast_output['table'] = forecast_table.run_with_input(forecast)
 
     with open('forecast-table.json', 'w') as output:
         json.dump(forecast_output, output)
