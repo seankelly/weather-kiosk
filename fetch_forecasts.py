@@ -2,6 +2,8 @@
 
 import argparse
 import json
+import random
+import time
 from datetime import datetime
 from xml.etree import ElementTree
 
@@ -9,6 +11,8 @@ import requests
 import yaml
 
 
+# Wait up to five minutes when running with --cron option.
+CONFIG_CRON_WAIT = 5 * 60.0
 CONFIG_DEFAULT_PATH = './weather_config.yaml'
 CONFIG_DEFAULT_OUTPUT = './forecast.json'
 NWS_FORECAST_TABLE_URL = ('https://forecast.weather.gov/MapClick.php?lat={latitude}&'
@@ -109,6 +113,7 @@ class NwsForecastTable:
 
 def options():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--cron', action='store_true', default=False)
     parser.add_argument('--config', default=CONFIG_DEFAULT_PATH)
     parser.add_argument('--input', metavar="FORECAST_XML")
     parser.add_argument('--output', metavar="OUTPUT_JSON", default=CONFIG_DEFAULT_OUTPUT)
@@ -119,6 +124,13 @@ def options():
 def main():
     args = options()
     forecast_output = {}
+
+    # Allow pausing a random amount of time to prevent running _exactly_ at the
+    # cron second. This can avoid thundering herd issues.
+    if args.cron:
+        cron_wait = random.uniform(0.0, CONFIG_CRON_WAIT)
+        print(f"Sleeping {cron_wait:0.2f} seconds because running in cron...")
+        time.sleep(cron_wait)
 
     with open(args.config) as config_file:
         config = yaml.safe_load(config_file)
