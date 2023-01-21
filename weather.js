@@ -18,9 +18,10 @@ function parse_gridpoints_forecast(json) {
     let current_period = periods[0];
 
     let temperature = current_period.temperature;
+    let prediction_text = current_period.isDaytime ? "Today:" : "Tonight:";
     let temperature_unit = current_period.temperatureUnit;
     let temperature_id = document.getElementById('temperature');
-    temperature_id.innerHTML = `<h1>${now.temperature} °${temperature_unit}</h1><h1>Predicted: ${temperature} °${temperature_unit}</h1>`;
+    temperature_id.innerHTML = `<h1>${now.temperature} °${temperature_unit}</h1><h1>${prediction_text} ${temperature} °${temperature_unit}</h1>`;
 
     let desc = current_period.detailedForecast;
     let weather_info_id = document.getElementById('weather-info');
