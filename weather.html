@@ -10,6 +10,9 @@
                 margin: 0.1em;
                 min-height: 200px;
             }
+            .text {
+                padding: 4px;
+            }
             .grid {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
@@ -31,9 +34,9 @@
     </head>
     <body>
         <div class="grid">
-            <div id="temperature" class="grid-one">Temperature</div>
-            <div id="weather-info" class="grid-two">Weather info</div>
-            <div id="moon" class="grid-one">Moon</div>
+            <div id="temperature" class="grid-one text">Temperature</div>
+            <div id="weather-info" class="grid-two text">Weather info</div>
+            <div id="moon" class="grid-one text">Moon</div>
             <div class="grid-full">
                 <div id="temperature-graph">Temperature and dewpoint graph</div>
                 <div id="precipitation-potential">Sky cover / precipitation potential</div>
