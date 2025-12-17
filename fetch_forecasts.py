@@ -80,9 +80,9 @@ class NwsForecastTable:
         def get_values(forecast, xpath, type=int):
             values = []
             for node in forecast.findall(xpath):
-                try:
+                if node.text:
                     values.append(type(node.text))
-                except ValueError:
+                else:
                     values.append(None)
             return values
 
